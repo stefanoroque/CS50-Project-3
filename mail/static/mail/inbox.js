@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.querySelector('#sent').addEventListener('click', () => load_mailbox('sent'));
   document.querySelector('#archived').addEventListener('click', () => load_mailbox('archive'));
   document.querySelector('#compose').addEventListener('click', compose_email);
+  document.querySelector('#compose-form').onsubmit = send_email;
 
   // By default, load the inbox
   load_mailbox('inbox');
@@ -20,6 +21,46 @@ function compose_email() {
   document.querySelector('#compose-recipients').value = '';
   document.querySelector('#compose-subject').value = '';
   document.querySelector('#compose-body').value = '';
+  // Clear out warning message
+  document.querySelector('#compose-msg').innerHTML = '';
+}
+
+function send_email() {
+
+  // Get values
+  let recipient = document.querySelector('#compose-recipients').value;
+  let subject = document.querySelector('#compose-subject').value;
+  let body = document.querySelector('#compose-body').value;
+
+  fetch('/emails', {
+    method: 'POST',
+    body: JSON.stringify({
+        recipients: recipient,
+        subject: subject,
+        body: body,
+    })
+  })
+  // Put response into json form
+  .then(response => response.json())
+  .then(result => {
+    if (result.message == undefined) {
+      // Email was not successfully sent
+      console.log(result);
+      document.querySelector('#compose-msg').innerHTML = `Oops! Something isn't right here: ${result.error}`;
+    } else {
+      // Email successfully sent
+      console.log(result)
+      // TODO: make sure this email is added to the list of sent emails
+      // Bring the user to their sent mailbox
+      load_mailbox('sent');
+    }
+  })
+  .catch(error => {
+    console.log('Error:', error)
+  });
+    
+  // Stop form from submitting
+  return false;
 }
 
 function load_mailbox(mailbox) {

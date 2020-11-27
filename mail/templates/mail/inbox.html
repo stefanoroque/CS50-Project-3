@@ -12,22 +12,26 @@
     <hr>
 
     <div id="emails-view">
+        <!-- Contains the content of the email mailbox -->
     </div>
 
     <div id="compose-view">
+        <!-- Contains a form where the user can compose a new email -->
         <h3>New Email</h3>
+        <div id="compose-msg"></div>
         <form id="compose-form">
             <div class="form-group">
                 From: <input disabled class="form-control" value="{{ request.user.email }}">
             </div>
             <div class="form-group">
-                To: <input id="compose-recipients" class="form-control">
+                To: <input id="compose-recipients" class="form-control" placeholder="Add all recipients separated by commas">
             </div>
             <div class="form-group">
                 <input class="form-control" id="compose-subject" placeholder="Subject">
             </div>
             <textarea class="form-control" id="compose-body" placeholder="Body"></textarea>
-            <input type="submit" class="btn btn-primary"/>
+            <!-- <input class="btn btn-primary" id="send-email-btn"/> -->
+            <input type="submit" class="btn btn-primary" id="send-email-btn"/>
         </form>
     </div>
 {% endblock %}
