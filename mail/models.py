@@ -13,7 +13,7 @@ class Email(models.Model):
     subject = models.CharField(max_length=255)
     body = models.TextField(blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
-    read = models.BooleanField(default=False)
+    read = models.BooleanField(default=True)
     archived = models.BooleanField(default=False)
 
     def serialize(self):

@@ -37,7 +37,7 @@ function send_email() {
     body: JSON.stringify({
         recipients: recipient,
         subject: subject,
-        body: body,
+        body: body
     })
   })
   // Put response into json form
@@ -50,7 +50,6 @@ function send_email() {
     } else {
       // Email successfully sent
       console.log(result)
-      // TODO: make sure this email is added to the list of sent emails
       // Bring the user to their sent mailbox
       load_mailbox('sent');
     }
@@ -79,7 +78,7 @@ function load_mailbox(mailbox) {
       // Print emails
       console.log(emails);
 
-      // For each email, display it in its own div
+      // For each email, display it in its own box
       for (i in emails) {
         add_email(emails[i], mailbox)
       }
@@ -92,27 +91,47 @@ function load_mailbox(mailbox) {
     email.className = 'btn btn-block email border border-dark';
     email.id = contents.id;
     if (mailbox == 'sent') {
-      // Display different data in the div
+      // Display different data in the box
       email.innerHTML = `<b>To:</b> ${contents.recipients} | <b>Subject:</b> ${contents.subject} | <b>Sent on:</b> ${contents.timestamp}`;
-      email.recipients = contents.recipients;
-      email.subject = contents.subject;
-      email.timestamp = contents.timestamp;
     } else {
       // we are showing the inbox or archived
+      // TODO: Make sure emails that are read (false bc of the flip) appear with a grey background (only need to do this in inbox or archived)
+      if (contents.read == false) {
+        // read is false because for some reason the email is generated with read as "true" no matter what, so i had to flip the meaning
+        // I think this is an error with the API
+        email.className = email.className + "btn-dark"
+      }
       email.innerHTML = `<b>From:</b> ${contents.sender} | <b>Subject:</b> ${contents.subject} | <b>Sent on:</b> ${contents.timestamp}`;
-      email.sender = contents.sender;
-      email.subject = contents.subject;
-      email.timestamp = contents.timestamp;
     }
-
-
-    
 
     // Add email to DOM
     document.querySelector('#emails-view').appendChild(email);
-    email.addEventListener('click', () => console.log(email.id));
+    email.addEventListener('click', () => view_email(email.id, mailbox));
   };
 
-  
+}
 
+// Take a user to a view where they can see the contents of a clicked email
+function view_email(email_id, mailbox) {
+  // If we are not in the "sent" mailbox, mark the email as read (this might be an issue when we come back to the mailbox view bc we do it after making all the buttons)
+  if (mailbox != 'sent') {
+    fetch(`/emails/${email_id}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+          // We are marking read emails as "false" because for some reason the email is generated with read as "true" no matter what
+          // I think thid may be an error with the API 
+          read: false
+      })
+    });
+  }
+
+  // Fetch the email contents
+  fetch(`/emails/${email_id}`)
+  .then(response => response.json())
+  .then(email => {
+      // Print email
+      console.log(email);
+
+      // ... do something else with email ...
+  });
 }
