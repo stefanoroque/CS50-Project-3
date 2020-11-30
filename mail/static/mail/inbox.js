@@ -15,6 +15,7 @@ function compose_email() {
 
   // Show compose view and hide other views
   document.querySelector('#emails-view').style.display = 'none';
+  document.querySelector('#single-email-view').style.display = 'none';
   document.querySelector('#compose-view').style.display = 'block';
 
   // Clear out composition fields
@@ -67,6 +68,7 @@ function load_mailbox(mailbox) {
   // Show the mailbox and hide other views
   document.querySelector('#emails-view').style.display = 'block';
   document.querySelector('#compose-view').style.display = 'none';
+  document.querySelector('#single-email-view').style.display = 'none';
 
   // Show the mailbox name
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
@@ -93,14 +95,12 @@ function load_mailbox(mailbox) {
     if (mailbox == 'sent') {
       // Display different data in the box
       email.innerHTML = `<b>To:</b> ${contents.recipients} | <b>Subject:</b> ${contents.subject} | <b>Sent on:</b> ${contents.timestamp}`;
+      // Show all white backgrounds on every email
+      email.className = email.className + " email-unread"
     } else {
       // we are showing the inbox or archived
-      // TODO: Make sure emails that are read (false bc of the flip) appear with a grey background (only need to do this in inbox or archived)
-      if (contents.read == false) {
-        // read is false because for some reason the email is generated with read as "true" no matter what, so i had to flip the meaning
-        // I think this is an error with the API
+      if (contents.read == true) {
         email.className = email.className + " email-read"
-        console.log(email.className)
       } else {
         email.className = email.className + " email-unread"
       }
@@ -121,9 +121,8 @@ function view_email(email_id, mailbox) {
     fetch(`/emails/${email_id}`, {
       method: 'PUT',
       body: JSON.stringify({
-          // We are marking read emails as "false" because for some reason the email is generated with read as "true" no matter what
-          // I think thid may be an error with the API 
-          read: false
+          // Mark email as read
+          read: true
       })
     });
   }
@@ -135,6 +134,34 @@ function view_email(email_id, mailbox) {
       // Print email
       console.log(email);
 
-      // ... do something else with email ...
+      // Show the single email and hide other views
+      document.querySelector('#emails-view').style.display = 'none';
+      document.querySelector('#compose-view').style.display = 'none';
+      document.querySelector('#single-email-view').style.display = 'block';
+
+      const subject = email.subject;
+      const sender = email.sender;
+      const recipients = email.recipients; // This is an array
+      const timestamp = email.timestamp;
+      const body = email.body;
+
+      document.querySelector('#subject').innerHTML = subject;
+      document.querySelector('#sender').innerHTML = `From: ${sender}`;
+
+      let x;
+      let all_recipients = ''
+      for (x of recipients) {
+        if (all_recipients == '') {
+          // First iteration, we dont need a comma
+          all_recipients += x;
+        } else {
+          all_recipients += x + ', ';
+        }
+      }
+      document.querySelector('#recipients').innerHTML = 'To: ' + all_recipients;
+
+      document.querySelector('#timestamp').innerHTML = 'Sent on: ' + timestamp;
+      document.querySelector('#body').innerHTML = body;
+
   });
 }
