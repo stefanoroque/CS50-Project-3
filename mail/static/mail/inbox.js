@@ -88,7 +88,7 @@ function load_mailbox(mailbox) {
   function add_email(contents, mailbox) {
     console.log(mailbox);
     const email = document.createElement('button');
-    email.className = 'btn btn-block email border border-dark';
+    email.className = 'btn btn-block border border-dark';
     email.id = contents.id;
     if (mailbox == 'sent') {
       // Display different data in the box
@@ -99,7 +99,10 @@ function load_mailbox(mailbox) {
       if (contents.read == false) {
         // read is false because for some reason the email is generated with read as "true" no matter what, so i had to flip the meaning
         // I think this is an error with the API
-        email.className = email.className + "btn-dark"
+        email.className = email.className + " email-read"
+        console.log(email.className)
+      } else {
+        email.className = email.className + " email-unread"
       }
       email.innerHTML = `<b>From:</b> ${contents.sender} | <b>Subject:</b> ${contents.subject} | <b>Sent on:</b> ${contents.timestamp}`;
     }
