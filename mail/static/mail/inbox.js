@@ -4,29 +4,44 @@ document.addEventListener('DOMContentLoaded', function() {
   document.querySelector('#inbox').addEventListener('click', () => load_mailbox('inbox'));
   document.querySelector('#sent').addEventListener('click', () => load_mailbox('sent'));
   document.querySelector('#archived').addEventListener('click', () => load_mailbox('archive'));
-  document.querySelector('#compose').addEventListener('click', compose_email);
+  document.querySelector('#compose').addEventListener('click', () => compose_email());
 
   // Other events
-  document.querySelector('#compose-form').onsubmit = send_email;
-  
+  document.querySelector('#compose-form').onsubmit = send_email;  
 
   // By default, load the inbox
   load_mailbox('inbox');
 });
 
-function compose_email() {
+function compose_email(recip = null, subj = null, time_stmp = null, bdy = null) {
 
   // Show compose view and hide other views
   document.querySelector('#emails-view').style.display = 'none';
   document.querySelector('#single-email-view').style.display = 'none';
   document.querySelector('#compose-view').style.display = 'block';
 
-  // Clear out composition fields
-  document.querySelector('#compose-recipients').value = '';
-  document.querySelector('#compose-subject').value = '';
-  document.querySelector('#compose-body').value = '';
+  if (recip == null) {
+    // completely new email, we do not want to prefill the form
+    // Clear out composition fields
+    document.querySelector('#compose-recipients').value = '';
+    document.querySelector('#compose-subject').value = '';
+    document.querySelector('#compose-body').value = '';
+    
+  } else {
+    // Pre-fill composition fields
+    document.querySelector('#compose-recipients').value = recip;
+    if (subj.slice(0,4) == 'Re: ') {
+      // Don't need to add prefix again
+      document.querySelector('#compose-subject').value = subj;
+    } else {
+      document.querySelector('#compose-subject').value = `Re: ${subj}`;
+    }
+    document.querySelector('#compose-body').value = `On ${time_stmp}, ${recip} wrote: "${bdy}"\n\n`;
+  }
+
   // Clear out warning message
   document.querySelector('#compose-msg').innerHTML = '';
+  
 }
 
 function send_email() {
@@ -72,10 +87,6 @@ function load_mailbox(mailbox) {
   document.querySelector('#emails-view').style.display = 'block';
   document.querySelector('#compose-view').style.display = 'none';
   document.querySelector('#single-email-view').style.display = 'none';
-
-  // // Delete all old emails before repopulating the mailbox
-  // var node = document.getElementById('emails-view');
-  // node.querySelectorAll('*').forEach(n => n.remove());
 
   // Show the mailbox name
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
@@ -189,7 +200,21 @@ function view_email(email_id, mailbox) {
       document.querySelector('#timestamp').innerHTML = 'Sent on: ' + timestamp;
       document.querySelector('#body').innerHTML = body;
 
-      // Remove any button that was previously placed in DOM
+      // Remove any reply button that was previously placed in DOM
+      if (document.getElementById('reply-btn') != null) {
+        document.getElementById('reply-btn').remove();
+      }
+
+      const reply_btn = document.createElement('button');
+      reply_btn.className = 'btn btn-primary';
+      reply_btn.id = 'reply-btn'
+      reply_btn.innerHTML = 'Reply';
+
+      // Add button to DOM
+      document.querySelector('#single-email-view').appendChild(reply_btn);
+      reply_btn.addEventListener('click', () => reply_email(email.id));
+
+      // Remove any archive button that was previously placed in DOM
       if (document.getElementById('archive-btn') != null) {
         document.getElementById('archive-btn').remove();
       }
@@ -202,7 +227,7 @@ function view_email(email_id, mailbox) {
         archive_btn.id = 'archive-btn'
         archive_btn.innerHTML = 'Archive Email';
 
-        // Add email to DOM
+        // Add button to DOM
         document.querySelector('#single-email-view').appendChild(archive_btn);
         archive_btn.addEventListener('click', () => archive_unarchive(email.id, mailbox));
 
@@ -225,6 +250,29 @@ function view_email(email_id, mailbox) {
     console.log('Error:', error)
   });
 }
+
+
+
+function reply_email (email_id) {
+  // Fetch the email contents
+  fetch(`/emails/${email_id}`)
+  .then(response => response.json())
+  .then(email => {
+      // Print email
+      console.log(email);
+
+      // Take user to pre-filled composition form
+      compose_email(email.sender, email.subject, email.timestamp, email.body);
+
+  })
+  .catch(error => {
+    console.log('Error:', error)
+  });
+
+}
+
+
+
 
 function archive_unarchive (email_id, mailbox) {
   let arch;

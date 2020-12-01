@@ -25,3 +25,7 @@ textarea {
 body {
     padding-bottom: 50px;
 }
+
+#reply-btn, #archive-btn {
+    margin: 5px;
+}
