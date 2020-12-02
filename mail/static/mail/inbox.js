@@ -1,3 +1,4 @@
+// Wait for the DOM to be completely loaded before adding event listeners
 document.addEventListener('DOMContentLoaded', function() {
 
   // Use buttons to toggle between views
@@ -5,14 +6,13 @@ document.addEventListener('DOMContentLoaded', function() {
   document.querySelector('#sent').addEventListener('click', () => load_mailbox('sent'));
   document.querySelector('#archived').addEventListener('click', () => load_mailbox('archive'));
   document.querySelector('#compose').addEventListener('click', () => compose_email());
-
-  // Other events
   document.querySelector('#compose-form').onsubmit = send_email;  
 
   // By default, load the inbox
   load_mailbox('inbox');
 });
 
+// Function to compose an email
 function compose_email(recip = null, subj = null, time_stmp = null, bdy = null) {
 
   // Show compose view and hide other views
@@ -28,6 +28,7 @@ function compose_email(recip = null, subj = null, time_stmp = null, bdy = null) 
     document.querySelector('#compose-body').value = '';
     
   } else {
+    // We are responding to an email
     // Pre-fill composition fields
     document.querySelector('#compose-recipients').value = recip;
     if (subj.slice(0,4) == 'Re: ') {
@@ -44,9 +45,10 @@ function compose_email(recip = null, subj = null, time_stmp = null, bdy = null) 
   
 }
 
+// Function to send an email using the API
 function send_email() {
 
-  // Get values
+  // Get values from the form
   let recipient = document.querySelector('#compose-recipients').value;
   let subject = document.querySelector('#compose-subject').value;
   let body = document.querySelector('#compose-body').value;
@@ -81,6 +83,7 @@ function send_email() {
   return false;
 }
 
+// Function to load the mailbox view
 function load_mailbox(mailbox) {
   
   // Show the mailbox and hide other views
@@ -98,7 +101,7 @@ function load_mailbox(mailbox) {
       // Print emails
       console.log(emails);
 
-      // For each email, display it in its own box
+      // For each email, display it in its own button
       for (i in emails) {
         add_email(emails[i], mailbox)
       }
@@ -106,12 +109,13 @@ function load_mailbox(mailbox) {
 
   // Add a new email with given contents to DOM
   function add_email(contents, mailbox) {
-    console.log(mailbox);
+
     const email = document.createElement('button');
     email.className = 'btn btn-block border border-dark';
     email.id = contents.id;
+
     if (mailbox == 'sent') {
-      // Display different data in the box
+      // Display different information in the button
       email.innerHTML = `<b>To:</b> ${contents.recipients} | <b>Subject:</b> ${contents.subject} | <b>Sent on:</b> ${contents.timestamp}`;
       // Show all white backgrounds on every email
       email.className = email.className + " email-unread"
@@ -141,7 +145,7 @@ function load_mailbox(mailbox) {
       email.innerHTML = `<b>From:</b> ${contents.sender} | <b>Subject:</b> ${contents.subject} | <b>Sent on:</b> ${contents.timestamp}`;
     }
 
-    // Add email to DOM
+    // Add email button to DOM
     document.querySelector('#emails-view').appendChild(email);
     email.addEventListener('click', () => view_email(email.id, mailbox));
   };
@@ -150,7 +154,7 @@ function load_mailbox(mailbox) {
 
 // Take a user to a view where they can see the contents of a clicked email
 function view_email(email_id, mailbox) {
-  // If we are not in the "sent" mailbox, mark the email as read (this might be an issue when we come back to the mailbox view bc we do it after making all the buttons)
+  // If we are not in the "sent" mailbox, mark the email as read
   if (mailbox != 'sent') {
     fetch(`/emails/${email_id}`, {
       method: 'PUT',
@@ -171,7 +175,7 @@ function view_email(email_id, mailbox) {
       // Print email
       console.log(email);
 
-      // Show the single email and hide other views
+      // Show the single email view and hide other views
       document.querySelector('#emails-view').style.display = 'none';
       document.querySelector('#compose-view').style.display = 'none';
       document.querySelector('#single-email-view').style.display = 'block';
@@ -182,11 +186,12 @@ function view_email(email_id, mailbox) {
       const timestamp = email.timestamp;
       const body = email.body;
 
+      // Populate the DOM
       document.querySelector('#subject').innerHTML = subject;
       document.querySelector('#sender').innerHTML = `From: ${sender}`;
 
       let x;
-      let all_recipients = ''
+      let all_recipients = '';
       for (x of recipients) {
         if (all_recipients == '') {
           // First iteration, we dont need a comma
@@ -210,7 +215,7 @@ function view_email(email_id, mailbox) {
       reply_btn.id = 'reply-btn'
       reply_btn.innerHTML = 'Reply';
 
-      // Add button to DOM
+      // Add reply button to DOM
       document.querySelector('#single-email-view').appendChild(reply_btn);
       reply_btn.addEventListener('click', () => reply_email(email.id));
 
@@ -252,7 +257,7 @@ function view_email(email_id, mailbox) {
 }
 
 
-
+// User replies to an email, brings them to a pre-filled compose form
 function reply_email (email_id) {
   // Fetch the email contents
   fetch(`/emails/${email_id}`)
@@ -272,8 +277,7 @@ function reply_email (email_id) {
 }
 
 
-
-
+// User archives or unarchives an email
 function archive_unarchive (email_id, mailbox) {
   let arch;
 
